@@ -8,9 +8,9 @@ import (
 	// "github.com/theplant/qortex/utils"
 	"html/template"
 	"labix.org/v2/mgo"
-	// "log"
+	"log"
 	"os"
-	// "runtime"
+	"runtime"
 )
 
 const (
@@ -77,18 +77,18 @@ func ErrorRecover(pages *Pages) Middleware {
 				fmt.Fprintf(os.Stderr, "-------> recover: %v\n", err)
 
 				airbrake.Error(err.(error), env.Request().Request)
-				// for skip := 1; ; skip++ {
-				// 	pc, file, line, ok := runtime.Caller(skip)
-				// 	if !ok {
-				// 		break
-				// 	}
-				// 	if file[len(file)-1] == 'c' {
-				// 		continue
-				// 	}
-				// 	f := runtime.FuncForPC(pc)
-				// 	log.Printf("%s:%d %s()\n", file, line, f.Name())
-				// }
-				// println("<------- \n")
+				for skip := 1; ; skip++ {
+					pc, file, line, ok := runtime.Caller(skip)
+					if !ok {
+						break
+					}
+					if file[len(file)-1] == 'c' {
+						continue
+					}
+					f := runtime.FuncForPC(pc)
+					log.Printf("%s:%d %s()\n", file, line, f.Name())
+				}
+				println("<------- \n")
 
 				headers = Headers{}
 				if env.Request().Header.Get(ajax_key) == ajax_value {
