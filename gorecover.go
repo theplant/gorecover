@@ -76,7 +76,7 @@ func ErrorRecover(pages *Pages) Middleware {
 
 				fmt.Fprintf(os.Stderr, "-------> recover: %v\n", err)
 
-				airbrake.Error(err.(error), env.Request().Request)
+				airbrake.Error(fmt.Errorf("%+v", err), env.Request().Request)
 				for skip := 1; ; skip++ {
 					pc, file, line, ok := runtime.Caller(skip)
 					if !ok {
