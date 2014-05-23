@@ -5,7 +5,8 @@ import (
 	"fmt"
 	. "github.com/paulbellamy/mango"
 	"github.com/theplant/airbrake-go"
-	// "github.com/theplant/qortex/utils"
+	"github.com/theplant/mangotemplate"
+	"github.com/theplant/qortex/i18n"
 	"html/template"
 	"labix.org/v2/mgo"
 	"log"
@@ -103,6 +104,56 @@ func ErrorRecover(pages *Pages) Middleware {
 				} else {
 					status = 500
 					body = Body(pages.internalError)
+				}
+			}
+		}()
+
+		return app(env)
+	}
+}
+
+func ErrorRecoverI18n(pages *Pages) Middleware {
+
+	return func(env Env, app App) (status Status, headers Headers, body Body) {
+
+		defer func() {
+			if err := recover(); err != nil {
+
+				locale := i18n.GetLocale(env)
+				if locale == nil {
+					locale = i18n.EN
+				}
+
+				fmt.Fprintf(os.Stderr, "-------> recover: %v\n", err)
+
+				airbrake.Error(fmt.Errorf("%+v", err), env.Request().Request)
+				for skip := 1; ; skip++ {
+					pc, file, line, ok := runtime.Caller(skip)
+					if !ok {
+						break
+					}
+					if file[len(file)-1] == 'c' {
+						continue
+					}
+					f := runtime.FuncForPC(pc)
+					log.Printf("%s:%d %s()\n", file, line, f.Name())
+				}
+				println("<------- \n")
+
+				headers = Headers{}
+				if env.Request().Header.Get(ajax_key) == ajax_value {
+					headers.Set(content_type_key, json_content_type)
+				} else {
+					headers.Set(content_type_key, html_content_type)
+				}
+
+				localizedTemplate := locale.GetLocalizedTemplate()
+				if err == mgo.ErrNotFound {
+					status = 404
+					body = Body(mangotemplate.RenderToStringT(pages.NotFoundPath, localizedTemplate, nil))
+				} else {
+					status = 500
+					body = Body(mangotemplate.RenderToStringT(pages.InternalErrorPath, localizedTemplate, nil))
 				}
 			}
 		}()
