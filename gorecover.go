@@ -3,15 +3,16 @@ package gorecover
 import (
 	"bytes"
 	"fmt"
+	"html/template"
+	"log"
+	"os"
+	"runtime"
+
 	. "github.com/paulbellamy/mango"
 	"github.com/theplant/airbrake-go"
 	"github.com/theplant/mangotemplate"
 	"github.com/theplant/qortex/i18n"
-	"html/template"
 	"labix.org/v2/mgo"
-	"log"
-	"os"
-	"runtime"
 )
 
 const (
@@ -153,6 +154,26 @@ func ErrorRecoverI18n(pages *Pages) Middleware {
 					body = Body(mangotemplate.RenderToStringT(pages.NotFoundPath, localizedTemplate, nil))
 				} else {
 					status = 500
+					body = Body(mangotemplate.RenderToStringT(pages.InternalErrorPath, localizedTemplate, nil))
+				}
+			}
+
+			if status == 404 {
+				if env.Request().Header.Get(ajax_key) != ajax_value {
+					locale := i18n.GetLocale(env)
+					if locale == nil {
+						locale = i18n.EN
+					}
+					localizedTemplate := locale.GetLocalizedTemplate()
+					body = Body(mangotemplate.RenderToStringT(pages.NotFoundPath, localizedTemplate, nil))
+				}
+			} else if status == 500 {
+				if env.Request().Header.Get(ajax_key) != ajax_value {
+					locale := i18n.GetLocale(env)
+					if locale == nil {
+						locale = i18n.EN
+					}
+					localizedTemplate := locale.GetLocalizedTemplate()
 					body = Body(mangotemplate.RenderToStringT(pages.InternalErrorPath, localizedTemplate, nil))
 				}
 			}
