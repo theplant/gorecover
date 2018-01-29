@@ -12,7 +12,7 @@ import (
 	"github.com/theplant/airbrake-go"
 	"github.com/theplant/mangotemplate"
 	"github.com/theplant/qortex/i18n"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 )
 
 const (
